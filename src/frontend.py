@@ -18,6 +18,7 @@ class StoreGUI:
         self.current_user = None
         self.cart = {}  # سبد خرید: {'product_id': quantity}
 
+        # تنظیمات کلی برای استایل (می‌توانید فونت‌ها را تغییر دهید)
         self.style = ttk.Style()
         self.style.configure("TFrame", background="#f0f0f0")  # رنگ پس‌زمینه فریم‌ها
         self.style.configure("TLabel", font=("B Nazanin", 12))  # فونت برای لیبل‌ها
@@ -333,29 +334,35 @@ class StoreGUI:
         self.admin_tree.pack(pady=10, fill=tk.BOTH, expand=True)
         self.load_admin_products_into_treeview()
 
-        add_product_frame = ttk.LabelFrame(product_management_frame, text="افزودن محصول جدید", padding="10 10 10 10")
+        add_product_frame = ttk.LabelFrame(product_management_frame, text="افزودن/ویرایش محصول", padding="10 10 10 10")
         add_product_frame.pack(fill=tk.X, pady=10)
         add_product_frame.columnconfigure(0, weight=1)
         add_product_frame.columnconfigure(1, weight=3)
 
-        ttk.Label(add_product_frame, text="نام محصول:").grid(row=0, column=0, padx=5, pady=2, sticky=tk.W)
+        ttk.Label(add_product_frame, text="شناسه محصول:").grid(row=0, column=0, padx=5, pady=2, sticky=tk.W)
+        self.product_id_admin_entry = ttk.Entry(add_product_frame, width=40)
+        self.product_id_admin_entry.grid(row=0, column=1, padx=5, pady=2, sticky=tk.EW)
+
+        ttk.Label(add_product_frame, text="نام محصول:").grid(row=1, column=0, padx=5, pady=2, sticky=tk.W)
         self.name_entry = ttk.Entry(add_product_frame, width=40)
-        self.name_entry.grid(row=0, column=1, padx=5, pady=2, sticky=tk.EW)
+        self.name_entry.grid(row=1, column=1, padx=5, pady=2, sticky=tk.EW)
 
-        ttk.Label(add_product_frame, text="قیمت:").grid(row=1, column=0, padx=5, pady=2, sticky=tk.W)
+        ttk.Label(add_product_frame, text="قیمت:").grid(row=2, column=0, padx=5, pady=2, sticky=tk.W)
         self.price_entry = ttk.Entry(add_product_frame, width=40)
-        self.price_entry.grid(row=1, column=1, padx=5, pady=2, sticky=tk.EW)
+        self.price_entry.grid(row=2, column=1, padx=5, pady=2, sticky=tk.EW)
 
-        ttk.Label(add_product_frame, text="موجودی:").grid(row=2, column=0, padx=5, pady=2, sticky=tk.W)
+        ttk.Label(add_product_frame, text="موجودی:").grid(row=3, column=0, padx=5, pady=2, sticky=tk.W)
         self.stock_entry = ttk.Entry(add_product_frame, width=40)
-        self.stock_entry.grid(row=2, column=1, padx=5, pady=2, sticky=tk.EW)
+        self.stock_entry.grid(row=3, column=1, padx=5, pady=2, sticky=tk.EW)
 
-        ttk.Label(add_product_frame, text="دسته‌بندی:").grid(row=3, column=0, padx=5, pady=2, sticky=tk.W)
+        ttk.Label(add_product_frame, text="دسته‌بندی:").grid(row=4, column=0, padx=5, pady=2, sticky=tk.W)
         self.cat_entry = ttk.Entry(add_product_frame, width=40)
-        self.cat_entry.grid(row=3, column=1, padx=5, pady=2, sticky=tk.EW)
+        self.cat_entry.grid(row=4, column=1, padx=5, pady=2, sticky=tk.EW)
 
-        ttk.Button(add_product_frame, text="افزودن محصول", command=self.add_product).grid(row=4, column=0, columnspan=2,
-                                                                                          pady=15)
+        ttk.Button(add_product_frame, text="افزودن/به‌روزرسانی محصول", command=self.add_or_update_product).grid(row=5,
+                                                                                                                column=0,
+                                                                                                                columnspan=2,
+                                                                                                                pady=15)
 
         # تب مشاهده سفارشات
         order_management_frame = ttk.Frame(self.admin_notebook, padding="10")
@@ -372,38 +379,39 @@ class StoreGUI:
             self.admin_tree.insert("", "end", iid=product.id,
                                    values=(product.id, product.name, product.price, product.stock, product.category))  #
 
-    def add_product(self):
+    def add_or_update_product(self):
         try:
+            product_id = self.product_id_admin_entry.get().strip()
             name = self.name_entry.get().strip()
             price = float(self.price_entry.get())
             stock = int(self.stock_entry.get())
             category = self.cat_entry.get().strip()
 
-            if not name or price <= 0 or stock <= 0 or not category:
+            if not product_id or not name or price <= 0 or stock <= 0 or not category:
                 raise ValueError("لطفا تمام فیلدها را به درستی پر کنید (مقادیر مثبت برای قیمت و موجودی).")
         except ValueError as e:
             messagebox.showerror("خطا در ورودی", f"ورودی نامعتبر: {e}")
             return
 
-        # تولید Product ID ساده (در یک سیستم واقعی ممکن است قوی‌تر باشد)
-        # مطمئن می‌شویم که ID تکراری نباشد
-        new_product_id_num = len(storeapp.products) + 1
-        new_product_id = f"P{new_product_id_num}"
-        while new_product_id in storeapp.products:
-            new_product_id_num += 1
-            new_product_id = f"P{new_product_id_num}"
+        # فراخوانی تابع add_product از StoreApp که حالا هم افزودن و هم به‌روزرسانی را انجام می‌دهد
+        success, action_type = storeapp.add_product(product_id, name, price, stock, category)
 
-        new_product = Product(new_product_id, name, price, stock, category)  #
-        if storeapp.add_product(new_product):
-            messagebox.showinfo("موفقیت", f"محصول {name} با موفقیت اضافه شد.")
+        if success:
+            if action_type == "added":
+                messagebox.showinfo("موفقیت", f"محصول {name} با شناسه {product_id} با موفقیت اضافه شد.")
+            else:  # action_type == "updated"
+                messagebox.showinfo("موفقیت", f"محصول {name} با شناسه {product_id} با موفقیت به‌روزرسانی شد.")
+
             # پاک کردن فیلدها
+            self.product_id_admin_entry.delete(0, tk.END)
             self.name_entry.delete(0, tk.END)
             self.price_entry.delete(0, tk.END)
             self.stock_entry.delete(0, tk.END)
             self.cat_entry.delete(0, tk.END)
             self.load_admin_products_into_treeview()  # به‌روزرسانی لیست محصولات مدیر
+            self.populate_category_filter()  # رفرش فیلتر دسته‌بندی برای مشتری (اگر دسته‌بندی جدیدی اضافه شده باشد)
         else:
-            messagebox.showerror("خطا", f"افزودن محصول {name} با مشکل مواجه شد.")
+            messagebox.showerror("خطا", f"عملیات افزودن/به‌روزرسانی محصول {name} با مشکل مواجه شد.")
 
     def build_order_management_tab(self, parent_frame):
         ttk.Label(parent_frame, text="لیست سفارشات:").pack(pady=(10, 5))
