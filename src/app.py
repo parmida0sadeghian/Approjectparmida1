@@ -1,6 +1,5 @@
 import csv  # برای خواندن و نوشتن فایل‌های CSV
 from datetime import date  # برای گرفتن تاریخ امروز
-import pandas as pd
 
 from User import User  # وارد کردن کلاس کاربر
 from Product import Product  # وارد کردن کلاس محصول
@@ -18,7 +17,6 @@ class StoreApp:
 
         # بارگذاری داده‌ها هنگام راه‌اندازی برنامه
         self.load_users_from_csv('users.csv.txt')
-        print("rest in peace")
         self.load_products_from_csv('products.csv.txt')
         # بارگذاری سفارشات و آیتم‌های سفارش (فایل جدید order_items.csv.txt اضافه شده است)
         self.load_orders_from_csv('orders.csv.txt', 'order_items.csv.txt')
@@ -29,7 +27,6 @@ class StoreApp:
             with open(filename, 'r', newline='', encoding='utf-8') as f:
                 reader = csv.reader(f)
                 for i, row in enumerate(reader):
-                    # print(f"\n row {i}: {row}\n")
                     if not row:
                         continue  # رد کردن ردیف‌های خالی
 
@@ -43,7 +40,7 @@ class StoreApp:
                         except ValueError as e:
                             print(f"⚠️ خطای تجزیه داده‌های کاربر در ردیف {i + 1}: {row}. خطا: {e}")
                         except Exception as e:
-                            print(f"⚠️ خطای غیرمنتظره در بارگذاری کاربر در ردیف {i + 1}: {row}. خطا: {e}")
+                            print(f"⚠️ خطای غیرمنتظره در بارگذاری کاربر در ردیف {i + 1}: {e}")
                     else:
                         print(f"⚠️ فرمت خط نامعتبر در users.csv.txt (ردیف {i + 1} رد شد): {row}")
             print("✅ کاربران با موفقیت بارگذاری شدند!")
@@ -102,13 +99,27 @@ class StoreApp:
         except Exception as e:
             print(f"❌ خطای ذخیره محصولات: {e}")
 
-    def add_product(self, product):
-        if product.id in self.products:
-            print(f"محصول با ID {product.id} از قبل وجود دارد.")
-            return False
-        self.products[product.id] = product
-        self.save_products_to_csv('products.csv.txt')
-        return True
+    def add_product(self, product_id, name, price, stock, category):
+        """
+        Adds a new product or updates an existing one.
+        Returns True if added/updated, False otherwise (e.g., validation error).
+        """
+        if product_id in self.products:
+            # Update existing product
+            existing_product = self.products[product_id]
+            existing_product.name = name
+            existing_product.price = price
+            existing_product.stock = stock
+            existing_product.category = category
+            self.save_products_to_csv('products.csv.txt')
+            return True, "updated"
+        else:
+            # Add new product
+            new_product = Product(product_id, name, price, stock, category)
+            self.products[product_id] = new_product
+            self.save_products_to_csv('products.csv.txt')
+            return True, "added"
+
 
     # ------------------------- مدیریت سفارشات ----------------------------
     def load_orders_from_csv(self, orders_filename, order_items_filename):
@@ -186,8 +197,7 @@ class StoreApp:
             with open(orders_filename, 'w', newline='', encoding='utf-8') as f:
                 writer = csv.writer(f)
                 for order in self.orders:
-                    writer.writerow(
-                        [order.get_order_id(), order.get_username(), order.get_total_price(), order.get_order_date()])
+                    writer.writerow([order.get_order_id(), order.get_username(), order.get_total_price(), order.get_order_date()])
             print(f"✅ سفارشات با موفقیت در {orders_filename} ذخیره شدند!")
 
             with open(order_items_filename, 'w', newline='', encoding='utf-8') as f:
@@ -202,7 +212,7 @@ class StoreApp:
     # ------------------------- منطق اصلی ----------------------------
     def login(self, username, password):
         user = self.users.get(username)
-        if user and user.check_password(password):# اگر یوزر مورد نظر وجود داشته باشد و رمز عبور وارد شده درست باشه ترو است
+        if user and user.check_password(password):
             print(f"✅ ورود موفقیت‌آمیز برای {username}")
             return user
         print("❌ نام کاربری یا رمز عبور نامعتبر است")
@@ -212,7 +222,7 @@ class StoreApp:
         user = self.users.get(username)
         if not user:
             return "خطا: کاربر یافت نشد."
-
+        
         if not cart_items:
             return "خطا: سبد خرید خالی است."
 
@@ -265,7 +275,7 @@ class StoreApp:
                 new_order_id_num += 1
                 generated_order_id = f"ORD{new_order_id_num}"
             order_id = generated_order_id
-
+            
         # ایجاد شیء سفارش
         new_order = Order(username, products_for_order, order_id)
         self.orders.append(new_order)
