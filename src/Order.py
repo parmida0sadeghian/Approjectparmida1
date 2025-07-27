@@ -20,7 +20,7 @@ class Order:
         self.order_date = datetime.date.today()
         # تاریخ ثبت سفارش (به صورت خودکار تاریخ امروز را قرار می‌دهد).
 
-        self.order_id = order_id if order_id is not None else self._generate_unique_order_id()  # اختصاص یا تولید
+        self.order_id = order_id
 
     def _calculate_total_price(self):
         # متد داخلی برای محاسبه قیمت کل سفارش.
@@ -32,11 +32,6 @@ class Order:
             price = item.get('price', 0)  # اگر 'price' نباشد، 0 در نظر گرفته می‌شود.
             calculated_total += quantity * price
         return calculated_total
-
-    def _generate_unique_order_id(self):
-        # در یک برنامه واقعی، این از یک روش قوی‌تر برای تولید ID استفاده می‌کند
-        # مانند UUID یا یک شمارنده پایدار. برای سادگی، فعلاً از رویکرد مبتنی بر زمان استفاده می‌کنیم.
-        return f"ORD-{datetime.datetime.now().strftime('%Y%m%d%H%M%S%f')}"
 
     def get_username(self):
         # متدی برای دریافت نام کاربری خریدار سفارش.

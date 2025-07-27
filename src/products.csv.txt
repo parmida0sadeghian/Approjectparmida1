@@ -1,7 +1,0 @@
-P101,Laptop,25000000.0,0,Electronics
-P102,Mouse,300000.0,20,Electronics
-P103,T-shirt,150000.0,13,Clothing
-P104,Coffee Mug,100000.0,10,Kitchen
-P5,Mouse pad,120000.0,8,Electronics
-P6,Laptop,21.0,3,Electronics
-P7,Laptop,250000000.0,2,Electronics

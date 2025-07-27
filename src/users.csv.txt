@@ -1,3 +1,0 @@
-ali,1234,1999874160000.0,customer
-sara,abcd,1000000.0,customer
-admin,admin123,0.0,admin

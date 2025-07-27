@@ -16,10 +16,10 @@ class StoreApp:
         self.order_items = OrderItemsManager()  # شی برای مدیریت آیتم‌های هر سفارش
 
         # بارگذاری داده‌ها هنگام راه‌اندازی برنامه
-        self.load_users_from_csv('users.csv.txt')
-        self.load_products_from_csv('products.csv.txt')
-        # بارگذاری سفارشات و آیتم‌های سفارش (فایل جدید order_items.csv.txt اضافه شده است)
-        self.load_orders_from_csv('orders.csv.txt', 'order_items.csv.txt')
+        self.load_users_from_csv('users.txt')
+        self.load_products_from_csv('products.txt')
+        # بارگذاری سفارشات و آیتم‌های سفارش (فایل جدید order_items.txt اضافه شده است)
+        self.load_orders_from_csv('orders.txt', 'order_items.txt')
 
     # ------------------------- مدیریت کاربران ----------------------------
     def load_users_from_csv(self, filename):
@@ -285,8 +285,8 @@ class StoreApp:
             self.order_items.add_item(order_id, item['product_id'], item['quantity'], item['price'])
 
         # ذخیره تمام تغییرات
-        self.save_products_to_csv('products.csv.txt')
-        self.save_users_to_csv('users.csv.txt')
-        self.save_orders_to_csv('orders.csv.txt', 'order_items.csv.txt')
+        self.save_products_to_csv('products.txt')
+        self.save_users_to_csv('users.txt')
+        self.save_orders_to_csv('orders.txt', 'order_items.txt')
 
         return f"سفارش {order_id} با موفقیت ثبت شد! مجموع: {total_order_price}. موجودی جدید شما: {user.balance}"
